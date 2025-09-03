@@ -143,6 +143,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+cura_env/
 
 # Spyder project settings
 .spyderproject
