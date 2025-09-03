@@ -1,5 +1,3 @@
-#!/bin/bash
-
 #creating directories
 mkdir -p src
 mkdir -p research
