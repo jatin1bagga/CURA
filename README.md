@@ -1,114 +1,187 @@
-CURA – AI Medical Chatbot 🩺🤖
 
-CURA is an AI-powered medical chatbot that uses a Retrieval-Augmented Generation (RAG) pipeline to provide accurate, context-aware healthcare Q&A.
-It integrates Flask (backend), LangChain, HuggingFace embeddings, Pinecone vector DB, and Google Gemini LLM.
+# CURA – AI Medical Chatbot 🩺🤖
 
-🚀 Features
+CURA is an **AI-powered medical chatbot** that uses **Retrieval-Augmented Generation (RAG)** to deliver accurate, context-aware healthcare Q&A.  
+It integrates **Flask**, **LangChain**, **HuggingFace embeddings**, **Pinecone** (vector search), and **Google Gemini** as the LLM.
 
-RAG Pipeline: Retrieves relevant knowledge chunks before generating an answer.
+> ⚠️ **Disclaimer:** This project is for research/education. It **does not** provide medical advice.
 
-Vector Search: Pinecone for semantic similarity search over medical PDFs.
+---
 
-Generative AI: Google Gemini (via LangChain) for context-aware responses.
+## ✨ Features
+- **RAG pipeline:** retrieves relevant chunks from your medical PDFs, then generates an answer with the LLM.
+- **Semantic search:** Pinecone vector index over your documents for fast similarity lookup.
+- **Clean API + Web UI:** Flask routes with a simple HTML/CSS front end.
+- **Modular design:** prompt templates and retriever/LLM chains for easy extension.
 
-Web Interface: Flask + HTML/CSS front-end for interactive Q&A.
+---
 
-Extensible: Modular design with custom prompts and retriever/LLM chaining.
+## 🗂️ Project Structure
+```
 
-Containerized: Deployable with Docker and Google Cloud Run.
-
-📂 Project Structure
-DATA/                   # Knowledge base + preprocessed embeddings
-│   ├── embedding.pkl
-│   ├── extracted_data.pkl
-│   ├── text_chunk.pkl
-│   └── The-Gale-Encyclopedia-of-Medicine.pdf
-
-research/               # Experiments & notebooks
-│   └── trials.ipynb
-
-src/                    # Core backend modules
-│   ├── __init__.py
-│   ├── helper.py       # PDF loader, text splitter, embedding utils
-│   └── prompt.py       # System + user prompts
-
-static/                 # Static assets
-│   └── style.css
-
-templates/              # Frontend templates
-│   └── index.html
-
-app.py                  # Flask app with RAG pipeline
-store_index.py          # Script to ingest PDFs & build Pinecone index
-requirements.txt        # Python dependencies
-dockerfile              # Docker instructions
-app.yaml                # GCP App Engine config (optional)
-setup.py                # Python packaging metadata
-template.sh             # Helper script
+DATA/                      # Knowledge base + cached artifacts (embeddings, chunks, etc.)
+research/
+└── trials.ipynb         # Experiments / notes
+src/
+├── **init**.py
+├── helper.py            # PDF loading, splitting, embeddings utils
+└── prompt.py            # System prompt + template(s)
+static/
+└── style.css
+templates/
+└── index.html           # Simple UI
+app.py                     # Flask app wiring RAG: retriever + LLM
+store\_index.py             # Ingest PDFs -> embeddings -> Pinecone index
+requirements.txt           # Python deps
+dockerfile                 # Container build
+app.yaml                   # (Optional) App Engine config
+setup.py                   # Package metadata
+template.sh                # Helper script(s)
 .gcloudignore / .gitignore
 README.md
 
-⚙️ Installation
-# Clone the repo
-git clone https://github.com/your-username/CURA.git
-cd CURA
+````
 
-# Setup environment
-python -m venv venv
-source venv/bin/activate  # (Windows: venv\Scripts\activate)
+---
 
-# Install dependencies
-pip install -r requirements.txt
+## 🧰 Tech Stack
+- **Backend:** Flask, Gunicorn  
+- **LLM & Orchestration:** Google Gemini (via `langchain-google-genai`), LangChain  
+- **Vector DB:** Pinecone (serverless)  
+- **Embeddings:** HuggingFace (384-dim sentence embeddings)  
+- **Frontend:** HTML + CSS (Jinja templates)  
+- **Ops:** Docker, (optionally) Google Cloud Run / App Engine
 
-🔑 Environment Variables
+---
 
-Create a .env file in the root:
+## ⚙️ Prerequisites
+- Python 3.10+ (3.11 recommended)  
+- Pinecone account & API key  
+- Google Generative AI API key (Gemini)
 
+---
+
+## 🔐 Environment Variables
+Create a `.env` file in the project root:
+```bash
 PINECONE_API_KEY=your_pinecone_api_key
 GOOGLE_API_KEY=your_google_api_key
+````
 
-▶️ Usage
+---
 
-Prepare the index:
+## 🚀 Quickstart (Local)
 
+1. **Create & activate venv**
+
+```bash
+python -m venv venv
+# Windows
+venv\Scripts\activate
+# macOS/Linux
+source venv/bin/activate
+```
+
+2. **Install dependencies**
+
+```bash
+pip install -r requirements.txt
+```
+
+3. **Add your PDFs**
+
+* Drop your medical PDFs into `DATA/` (or keep existing ones).
+
+4. **Build / refresh the vector index**
+
+```bash
 python store_index.py
+```
 
+This loads PDFs, splits text, creates 384-dim embeddings, and writes to a Pinecone index (default: `cura-chatbot`).
 
-Run the chatbot:
+5. **Run the app**
 
+```bash
 python app.py
-
-
-or for production:
-
+# or production-style:
 gunicorn -b 0.0.0.0:8080 app:app
+```
 
+Visit: `http://localhost:8080`
 
-Access the app at: http://localhost:8080
+---
 
-🐳 Docker & Cloud Run
-# Build locally
+## 🧠 How it Works (RAG)
+
+1. **Ingestion**: Load PDFs → split into chunks → embed with HuggingFace → upsert to Pinecone.
+2. **Retrieval**: For each query, fetch top-k similar chunks from Pinecone.
+3. **Generation**: Feed retrieved context + prompt to Gemini via LangChain; return an answer.
+
+---
+
+## 🛣️ API (minimal)
+
+* `GET /` → returns the chat UI.
+* `POST /get` (form field `msg`) → returns the model answer string.
+
+Example (cURL):
+
+```bash
+curl -X POST -F "msg=What are symptoms of anemia?" http://localhost:8080/get
+```
+
+---
+
+## 🐳 Docker
+
+Build & run locally:
+
+```bash
 docker build -t cura-chatbot .
+docker run -p 8080:8080 --env-file .env cura-chatbot
+```
 
-# Run locally
-docker run -p 8080:8080 cura-chatbot
+---
 
-# Deploy to Cloud Run
-gcloud run deploy cura-chatbot --source . --allow-unauthenticated --region asia-south1
+## ☁️ Deploy (Google Cloud Run)
 
-📊 Tech Stack
+```bash
+gcloud auth login
+gcloud config set project YOUR_PROJECT_ID
+gcloud run deploy cura-chatbot \
+  --source . \
+  --region asia-south1 \
+  --allow-unauthenticated
+```
 
-Backend: Flask, Gunicorn
+**Env vars on Cloud Run:**
 
-LLM & RAG: LangChain, HuggingFace Embeddings, Google Gemini LLM
+```bash
+gcloud run services update cura-chatbot \
+  --set-env-vars "PINECONE_API_KEY=xxxxx,GOOGLE_API_KEY=yyyyy"
+```
 
-Vector DB: Pinecone
+> Alternatively, use **App Engine** (ensure `app.yaml` defines a Python runtime and entrypoint).
 
-Frontend: HTML, CSS (Flask templates)
+---
 
-Deployment: Docker, Google Cloud Run / App Engine
+## 🧪 Tips & Troubleshooting
 
-👤 Author
+* **Index name mismatch**: Keep the same index name in `store_index.py` and `app.py` (default: `cura-chatbot`).
+* **Dimensionality**: Embedding dimension must match the Pinecone index (here **384**).
+* **Quota/auth**: Ensure both API keys are present and valid in `.env` or platform env vars.
+* **CORS/UI**: The included UI posts form data to `/get`. Adjust templates as needed.
 
-Jatin Bagga
-📧 aloc1345@gmail.com
+---
+
+## 📜 License
+
+See **LICENSE** in this repository.
+
+---
+
+## 👤 Author
+
+**Jatin Bagga** — *CURA medibot*
+📧 [aloc1345@gmail.com](mailto:aloc1345@gmail.com)
