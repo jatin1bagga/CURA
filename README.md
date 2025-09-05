@@ -183,5 +183,8 @@ See **LICENSE** in this repository.
 
 ## 👤 Author
 
-**Jatin Bagga** — *CURA medibot*
+**Jatin Bagga**
 📧 [aloc1345@gmail.com](mailto:aloc1345@gmail.com)
+
+**Chhavi Tokhi**
+📧 [ctokhi_be22@thapar.edu](mailto:ctokhi_be22@thapar.edu)
