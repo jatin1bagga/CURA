@@ -1,9 +1,10 @@
+flask==3.1.1
+gunicorn==23.0.0          # production WSGI server, required on Render/GCP
 langchain==0.3.26
-flask==3.1.1 
-sentence-transformers==4.1.0
-pypdf==5.6.1 
-python-dotenv==1.1.0
-langchain-pinecone==0.2.8 
 langchain-community==0.3.26
-langchain-google-genai
--e .
+langchain-pinecone==0.2.8
+langchain-google-genai     # keep unpinned if no version on PyPI
+pinecone-client==4.1.0     # Pinecone SDK, needed for vector DB
+sentence-transformers==4.1.0
+pypdf==5.6.1
+python-dotenv==1.1.0
